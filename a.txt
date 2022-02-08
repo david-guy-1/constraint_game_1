@@ -1,0 +1,31 @@
+https://bdsmtest.org/r/BRcbkWNd
+
+changes to make to game:
+
+(done) split tutorials into different sections
+(done) move instructions and back buttons together
+(done) change the screen size (will require re-drawing backgrounds) 
+(done) make icons for left buttons.
+(done) tile info should be displayed on mouse over instead of clicking
+(not gonna do) minimap should be labelled as a minimap
+(done) instructions should have pages and pictures
+(done) tutorials should be merged into levels.
+
+
+
+====
+
+
+pages:
+1. get heroes to exit, 
+2. scroll with arrow keys or by clicking minimap
+3. explain play/stop/pause/buttons
+4. monsters
+5. items.
+6. branches
+7. scrolls and books
+8. keys
+9. eggs
+
+
+

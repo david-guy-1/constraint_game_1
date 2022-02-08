@@ -1,0 +1,33 @@
+2dl for game:
+
+
+hand-make some levels
+
+make auto-generation algorithm
+
+make images for heroes and monsters.
+
+import ALL of the items from topological sort game
+
+make backgrounds  and dungeon icons (might need to change render algorithm)
+
+make tutorial
+
+make menus
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DEADLINE (for RELEASE): 12/25 
+
+

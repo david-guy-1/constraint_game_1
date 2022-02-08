@@ -1,0 +1,188 @@
+
+//items
+var red_star = new item("red star", ["red", "star"]);
+var blue_star = new item("red star", ["blue", "star"]);
+var red_hammer = new item("red hammer", ["red", "hammer"]);
+var blue_hammer = new item("blue hammer", ["blue", "hammer"]);
+var red_orb = new item("red orb", ["red", "orb"])
+
+
+//monsters
+var weak_to_red = new monster("x", ["red"], ["scroll_ice scroll"], false);
+var weak_to_blue_hammer = new monster("y", ["blue hammer"], [], false);
+var weak_to_ice_scroll = new monster("z", ["scroll_ice scroll"], [red_orb], false);
+
+
+export function test_monster_death(){
+	console.log(weak_to_red.should_die(red_star)) // true
+	console.log(weak_to_red.should_die(blue_star)) // false
+	console.log(weak_to_red.should_die(red_hammer)) // true
+	console.log(weak_to_red.should_die(blue_hammer)) // false
+
+	console.log(weak_to_blue_hammer.should_die(red_star)) // false
+	console.log(weak_to_blue_hammer.should_die(blue_star)) // false
+	console.log(weak_to_blue_hammer.should_die(red_hammer)) // false
+	console.log(weak_to_blue_hammer.should_die(blue_hammer)) // true
+}
+
+// make a dungeon
+var dungeon_1 = new dungeon("dungeon 1", ["nothing", weak_to_red, weak_to_ice_scroll], "exit")
+var level_1 = new level(new Set([dungeon_1]), new Set(["dungeon 1"]) , [red_star]);
+var solution_1_good = new solution(["dungeon 1"], {} , {});
+var solution_1_bad = new solution([], {} , {});
+
+ 
+export function test_single_dungeon(){
+	// take one step, first monster
+	var good_run = new run_level(level_1, solution_1_good);
+	good_run.do_move("dungeon 1");
+	
+	// show locations
+	console.log(good_run.locations["dungeon 1"]) // "dungeon 1"
+	console.log(good_run.location_index["dungeon 1"]) // "1"
+	console.log(good_run.scrolls) // ice scroll
+	
+	// another step, this brings us to the second monster
+	good_run.do_move("dungeon 1");
+	console.log(good_run.locations["dungeon 1"]) // "dungeon 1"
+	console.log(good_run.location_index["dungeon 1"]) // "2"
+	
+	// we exit
+	good_run.do_move("dungeon 1");
+	
+	console.log(good_run.scrolls) // ice scroll
+	console.log(good_run.items["dungeon 1"]) // "red star, red orb"
+	console.log(good_run.exited["dungeon 1"]) // "true"
+	
+	
+	
+}
+export function test_single_dungeon_bad(){
+	// take one step
+	var bad_run = new run_level(level_1, solution_1_bad);
+	bad_run.do_move("dungeon 1");
+	
+	// show locations, should not be changed
+	console.log(bad_run.locations["dungeon 1"]) // "dungeon 1"
+	console.log(bad_run.location_index["dungeon 1"]) // "0"
+	
+	console.log(bad_run.can_move("dungeon 1")); // false
+
+}
+
+
+export function test_single_dungeon_solutions(){
+	console.log(is_solution(level_1, solution_1_good)) // true
+	console.log(is_solution(level_1, solution_1_bad)) // false
+}
+
+var drops_blue_key = new monster("a", ["red"], ["lever_blue"]);
+var dung_1a = new dungeon("1a", ["nothing", "nothing"], ["1a1", "1ab"])
+var dung_1a1 = new dungeon("1a1", ["nothing", drops_blue_key], "exit")
+var dung_1ab = new dungeon("1ab", ["nothing"], "exit")
+var dung_2a = new dungeon("2a", ["nothing", "door_blue", "nothing"], "exit")
+
+var keyed_level = new level(new Set([dung_1a,dung_1a1,dung_1ab,dung_2a]), new Set(["1a", "2a"]), [red_star])
+
+var solution_2_good = new solution(["1a"], {} , {"1a":0});
+
+var solution_2_bad = new solution(["1a"], {} , {"1a":1});
+
+
+export function test_keyed_level_solutions(){
+	console.log(is_solution(keyed_level, solution_2_good)) // true
+	console.log(is_solution(keyed_level, solution_2_bad)) // false
+}
+
+
+var unkillable = new monster("a", [], [], true);
+var dung_ua = new dungeon("1a", ["nothing", unkillable], "exit");
+var unkillable_level = new level(new Set([dung_ua]), new Set(["1a"]), [red_star, blue_hammer, blue_star]);
+var solution_3_good = new solution([undefined, undefined, "1a"], {"1a 1":false} , {});
+var solution_3_bad = new solution([undefined, undefined], {"1a 1":true} , {});
+
+export function test_unkillable_level_solutions(){
+	console.log(is_solution(unkillable_level, solution_3_good)) // true
+	console.log(is_solution(unkillable_level, solution_3_bad)) // false
+}
+
+export function get_keyed_level(){
+	return keyed_level;
+}
+export function get_keyed_solution(){
+	return solution_2_good
+}
+
+
+
+export function get_complete(){
+	// get something complete, ready for rendering
+	var rl = new run_level(keyed_level, solution_2_good);
+	var result = compute_render_locations_total(keyed_level);
+	return [rl, result]
+}
+
+export function get_complete_2(){
+	// get something complete, ready for rendering
+	var rl = new run_level(unkillable_level, solution_3_good);
+	var result = compute_render_locations_total(unkillable_level);
+	return [rl, result]
+}
+
+
+var item_w = new item("blue volcano book", [])
+
+var item_x = new item("red lemon book", []) 
+
+var item_z =  new item("yellow tree book", [])
+
+var drop_scroll_monster = new monster("drop yellow leaf scroll", ["blue volcano book"], ["scroll_yellow leaf scroll"])
+
+var drop_x_monster = new monster("drop x", ["scroll_yellow leaf scroll"], [item_x], true)
+
+var weak_to_w = new monster("drop 1", ["blue volcano book"], [])
+
+
+var weak_to_x = new monster("drop 2", ["red lemon book"], [])
+
+var weak_to_z = new monster("drop 3", ["yellow tree book"], [])
+
+var weak_to_z_2 = new monster("drop 4", ["yellow tree book"], [])
+
+var dungeon_big_1 = new dungeon("big 1", ["nothing", "lever_silver triangle key", drop_x_monster], ["big 1a", "big 1b"])
+
+var dungeon_big_2 = new dungeon("big 2", ["nothing", weak_to_z_2, drop_scroll_monster], ["big 2a"])
+
+var dungeon_big_1a = new dungeon("big 1a", ["nothing" , weak_to_x], "exit")
+
+var dungeon_big_1b = new dungeon("big 1b", [ "nothing",weak_to_w, weak_to_z], "exit")
+
+var dungeon_big_2a = new dungeon("big 2a", ["nothing", "door_silver triangle key"], "exit")
+
+var level_1 = new level(new Set([dungeon_big_1, dungeon_big_2, dungeon_big_1a,dungeon_big_1b,dungeon_big_2a ]), new Set(["big 1", "big 2"]) , [item_w, item_z]);
+
+export function get_big(){
+	// get something complete, ready for rendering
+	var rl = new run_level(level_1, level_1.make_standard_solution());
+	var result = compute_render_locations_total(level_1);
+	return [rl, result]
+}
+
+// bottom must fight a monster that drops a scroll (forcing bottom to choose an item, say W, so top can't have it).
+//  top can choose to fight a monster (egg) that can only be killed by the scroll. This drops item X
+// top must then choose a branch that contains a monster that is weak to item X 
+// the other branch must contain a monster weak to item W, but also another monster weak to item Z
+// item Z must be given to bottom, as scroll monster is weak to Z
+
+// top : egg weak to scroll & drops item X -> weak to X / weak to W , weak to Z
+// bottom : drops scroll & weak to Z.
+
+// items : W, Z
+
+// solution : hatch  both eggs, go path 1, items : W -> top, Z -> bottom
+
+
+
+// then, make procedural generation.
+
+

@@ -1,0 +1,158 @@
+generating a level:
+
+
+we use h1, h2, ... for heroes, p1, p2, ... for paths, and i1, i2, ... for items, s1, s2, ... for scrolls, d1, d2, ... for doors, e1, e2, ... for eggs and c1, c2, ... for statements (not written out explicitly)
+
+
+idea is to "force" a player to pick a certain item, or go a certain route
+
+but ... don't make it too "obvious".
+
+"and" constraints are easy.
+
+"or" constraints (X has item Y or goes route Z) : egg weak to Y and drops item blocking every path except Z
+
+"xor" constraints : same scroll dropped twice / same key found twice. One of which must be chosen, but not "and" both of them.
+
+so we can make basic logic circuits like this. 
+
+make some problems by hand, and see what goes on. 
+
+important idea is: monster weak to the same thing in multiple dungeons, forcing player to choose who gets what item.
+
+
+idea: write logic formulas and make them into levels
+
+if we want to force an "OR" condition: (give this player X or go route Y): 
+
+make a monster weak to X and drops a key. This key unlocks doors that block other routes.
+
+SAT is NP-complete so this shouldn't be too hard. 
+
+piece together parts of levels, but these parts will involve multiple heroes.
+
+try taking inspiration from circuit SAT - for example: a piece with, say, 3 solutions. Only one of which will allow you to go through a later part.
+
+This means that we can "combine" pieces like this. 
+
+For example: hero A has item X or hero B goes through path P .
+
+This is a part with 2 solutions. Then, a later part can only be solvable if A doesn't have item X. (for example, a part where another hero must have item X)
+
+Then, since we know B must go through path P, we can do some other cool stuff.
+
+Thus, we want to make some logic gates:
+
+	a "require" gate (can only be passed if a player has a certain item/scroll/key, so 3 types of require gates)
+	
+	a "give" gate that gives the player stuff (trivial).
+	
+	for now, just make "require" and "give" circuits. 
+	
+	"and" and "or" circuits are easy to make from here.
+	
+"non-obvious" force : have a scroll there, but in a deeper area.
+
+I still think big levels need to be pieced from small levels. For example: 
+
+a part that can only be solved if s1 (for example, a monster being blocked)
+s1 must be collected by a h2~p1
+For h2~p1, a door must be opened, requiring e1 and h3~p2, and h3~i2
+h4 can go down two paths. one of which requires i2. This means that path cannot be taken.
+
+this "work backwards" idea might succeed. We piece together things like this. Require s1, and for s1 to be true, require (s2 or s3), for example : a door with 2 keys. But also require (not s2), so (require s3). For s3, require ....
+
+Thus, "force" and "grant" pattern is needed.
+
+problem: if a component involves multiple heroes, how can we piece them together?
+
+idea : since binary constraints (such as h1~i1) only involve one hero, we can make a component just for that hero.
+
+so, the idea is that we force heroes to choose a path from a rooted tree. Each vertex is a force/grant node. Thus, a level is a "forest of force/grant".
+
+Let's try to put the above into a force/grant forest.
+
+(f : s1 , g : -)
+
+( any )
+(f : e1, d1 ,  g : s1)  (any)
+
+(any)
+(any) (f : h3~i2 , g : d1)
+
+(any)
+(f : i2) (any)
+
+ok, so, see the "any"'s? 
+
+there are two types of "any"'s, calling them non-terminal and terminal. Also, required and not required.
+
+terminality is relevant for whether or not we can extend. all terminal nodes will be marked as "exit"
+
+"required" is relevant for if we can/should add to it.
+
+
+make a part with only one solution for most heroes (see above). Then, join that with another part, and so on. 
+
+A partial solution should have , for every tree in the forst, a list of leaves that the hero can exit from.
+
+If there is only one location, extend from it the obvious way.
+
+If there is more than one, plug one to make it impossible, then apply the above.
+
+---
+
+so, let's try to code it.
+
+what do we need? 
+
+some kind of "impossible generator" that plugs in holes for one path
+
+some kind of "work backwards" algorithm that generates list of requirements as above. This might require topological sorting!!!! (or just generating a small DAG)
+
+some "compiler" that takes the generated list, and uses it to extend the paths for the heroes.
+
+should code ALL of these to take an existing tentative level and add to it, not create a new piece and try to attach to old pieces.
+
+first, generate a ROOTED TREE with given size for each heroes
+	then , choose leaf nodes as "destination". 
+	then, add constraints to force the heroes to go to the destinations
+	also, add constraints to force certain heroes to have those items.
+	
+	the hard part is the "add constraints" part. 
+	
+	critical path = path that the hero must take to get to the destination
+	must-kill = a monster that must be killed (to unblock a critical path)
+	
+	constraints can be given like this: 
+	
+	these constraints can itself take other constraints.
+	
+	
+	force a hero to go a certain path (make a node forced):
+		the root nodes are always forced
+		put a scroll there that kills a monster on another hero's forced node.
+		put a key there that unlocks a door on another hero's forced node
+		put a blocker on the other paths
+	
+	blockers:
+		monsters that require an item that another hero needs (see next)
+		door that requires a key that is on another hero's forced-away node (node whose parent has a different child that is a forced node)
+		
+		
+	force a hero to have an item:
+		put a monster (on that hero's forced node) weak only to that item that must be killed 
+	
+
+	
+	For the step "	then, add constraints to force the heroes to go to the destinations" (assume forest has already been generated):
+
+think in terms of "forced nodes" not critical paths.
+
+	root node is a "forced node". all heroes must go here, which helps in forcing, say items. 
+	
+	this "forced node" concept might be better than thinking in critical paths. 
+	
+	actually they're kinda equivalent. 
+
+
